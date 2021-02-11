@@ -12,161 +12,141 @@ module rvfi_wrapper (
 	wire actual_reset = reset || |reset_cnt;
 
 	always @(posedge clock) begin
-		reset_cnt <= reset ? 5 : reset_cnt - |reset_cnt;
+		reset_cnt <= reset ? 4'd 5 : reset_cnt - |reset_cnt;
 	end
 `endif
 
-	(* keep *) wire  [                  31:0] reset_vector = 32'h10040;
+	(* keep *) wire  [31:0] reset_vector = 32'h10040;
 
-	// Rocket Tile Inputs
+	// Rocket TileLink Slave
 
-	(* keep *) wire                           io_master_0_a_ready;
-	(* keep *) wire                           io_master_0_d_valid;
-	(* keep *) wire  [                   2:0] io_master_0_d_bits_opcode;
-	(* keep *) wire  [                   1:0] io_master_0_d_bits_param;
-	(* keep *) wire  [                   3:0] io_master_0_d_bits_size;
-	(* keep *) wire                           io_master_0_d_bits_source;
-	(* keep *) wire                           io_master_0_d_bits_sink;
-	(* keep *) wire                           io_master_0_d_bits_denied;
-	(* keep *) wire  [`RISCV_FORMAL_XLEN-1:0] io_master_0_d_bits_data;
-	(* keep *) wire                           io_master_0_d_bits_corrupt;
+	(* keep *) wire        tl_slave_a_ready;
+	(* keep *) wire        tl_slave_a_valid = 0;
+	(* keep *) wire [2:0]  tl_slave_a_bits_opcode = 0;
+	(* keep *) wire [2:0]  tl_slave_a_bits_param = 0;
+	(* keep *) wire [2:0]  tl_slave_a_bits_size = 0;
+	(* keep *) wire [4:0]  tl_slave_a_bits_source = 0;
+	(* keep *) wire [31:0] tl_slave_a_bits_address = 0;
+	(* keep *) wire [7:0]  tl_slave_a_bits_mask = 0;
+	(* keep *) wire [63:0] tl_slave_a_bits_data = 0;
 
-	(* keep *) wire                           io_slave_0_a_valid = 0;
-	(* keep *) wire  [                   2:0] io_slave_0_a_bits_opcode = 0;
-	(* keep *) wire  [                   2:0] io_slave_0_a_bits_param = 0;
-	(* keep *) wire  [                   2:0] io_slave_0_a_bits_size = 0;
-	(* keep *) wire  [                   4:0] io_slave_0_a_bits_source = 0;
-	(* keep *) wire  [                  31:0] io_slave_0_a_bits_address = 0;
-	(* keep *) wire  [       `XLEN_BYTES-1:0] io_slave_0_a_bits_mask = 0;
-	(* keep *) wire  [`RISCV_FORMAL_XLEN-1:0] io_slave_0_a_bits_data = 0;
-	(* keep *) wire                           io_slave_0_d_ready = 0;
+	(* keep *) wire        tl_slave_d_ready = 0;
+	(* keep *) wire        tl_slave_d_valid;
+	(* keep *) wire [2:0]  tl_slave_d_bits_opcode;
+	(* keep *) wire [1:0]  tl_slave_d_bits_param;
+	(* keep *) wire [2:0]  tl_slave_d_bits_size;
+	(* keep *) wire [4:0]  tl_slave_d_bits_source;
+	(* keep *) wire        tl_slave_d_bits_sink;
+	(* keep *) wire        tl_slave_d_bits_denied;
+	(* keep *) wire [63:0] tl_slave_d_bits_data;
+	(* keep *) wire        tl_slave_d_bits_corrupt;
 
-	// Rocket Tile Outputs
+	// Rocket TileLink Master
 
-	(* keep *) wire                          io_master_0_a_valid;
-	(* keep *) wire [                   2:0] io_master_0_a_bits_opcode;
-	(* keep *) wire [                   2:0] io_master_0_a_bits_param;
-	(* keep *) wire [                   3:0] io_master_0_a_bits_size;
-	(* keep *) wire                          io_master_0_a_bits_source;
-	(* keep *) wire [                  31:0] io_master_0_a_bits_address;
-	(* keep *) wire [       `XLEN_BYTES-1:0] io_master_0_a_bits_mask;
-	(* keep *) wire [`RISCV_FORMAL_XLEN-1:0] io_master_0_a_bits_data;
-	(* keep *) wire                          io_master_0_a_bits_corrupt;
-	(* keep *) wire                          io_master_0_d_ready;
+	(* keep *) wire        tl_master_a_ready;
+	(* keep *) wire        tl_master_a_valid;
+	(* keep *) wire [2:0]  tl_master_a_bits_opcode;
+	(* keep *) wire [2:0]  tl_master_a_bits_param;
+	(* keep *) wire [3:0]  tl_master_a_bits_size;
+	(* keep *) wire        tl_master_a_bits_source;
+	(* keep *) wire [31:0] tl_master_a_bits_address;
+	(* keep *) wire [7:0]  tl_master_a_bits_mask;
+	(* keep *) wire [63:0] tl_master_a_bits_data;
+	(* keep *) wire        tl_master_a_bits_corrupt;
 
-	(* keep *) wire                          io_slave_0_a_ready;
-	(* keep *) wire                          io_slave_0_d_valid;
-	(* keep *) wire [                   2:0] io_slave_0_d_bits_opcode;
-	(* keep *) wire [                   2:0] io_slave_0_d_bits_size;
-	(* keep *) wire [                   4:0] io_slave_0_d_bits_source;
-	(* keep *) wire [`RISCV_FORMAL_XLEN-1:0] io_slave_0_d_bits_data;
+	(* keep *) wire        tl_master_d_ready;
+	(* keep *) wire        tl_master_d_valid;
+	(* keep *) wire [2:0]  tl_master_d_bits_opcode;
+	(* keep *) wire [1:0]  tl_master_d_bits_param;
+	(* keep *) wire [3:0]  tl_master_d_bits_size;
+	(* keep *) wire        tl_master_d_bits_source;
+	(* keep *) wire        tl_master_d_bits_sink;
+	(* keep *) wire        tl_master_d_bits_denied;
+	(* keep *) wire [63:0] tl_master_d_bits_data;
+	(* keep *) wire        tl_master_d_bits_corrupt;
 
-	// TileLink A-D Dummy Slave
+	// TileLink Master A-D Dummy Slave
 
 	tilelink_ad_dummy tilelink_slave (
-		.clock                  (clock                     ),
-		.reset                  (actual_reset              ),
+		.clock                  (clock                   ),
+		.reset                  (actual_reset            ),
 
-		.channel_a_ready        (io_master_0_a_ready       ),
-		.channel_a_valid        (io_master_0_a_valid       ),
-		.channel_a_bits_address (io_master_0_a_bits_address),
-		.channel_a_bits_data    (io_master_0_a_bits_data   ),
-		.channel_a_bits_mask    (io_master_0_a_bits_mask   ),
-		.channel_a_bits_opcode  (io_master_0_a_bits_opcode ),
-		.channel_a_bits_param   (io_master_0_a_bits_param  ),
-		.channel_a_bits_size    (io_master_0_a_bits_size   ),
-		.channel_a_bits_source  (io_master_0_a_bits_source ),
+		.channel_a_ready        (tl_master_a_ready       ),
+		.channel_a_valid        (tl_master_a_valid       ),
+		.channel_a_bits_address (tl_master_a_bits_address),
+		.channel_a_bits_data    (tl_master_a_bits_data   ),
+		.channel_a_bits_mask    (tl_master_a_bits_mask   ),
+		.channel_a_bits_opcode  (tl_master_a_bits_opcode ),
+		.channel_a_bits_param   (tl_master_a_bits_param  ),
+		.channel_a_bits_size    (tl_master_a_bits_size   ),
+		.channel_a_bits_source  (tl_master_a_bits_source ),
 
-		.channel_d_ready        (io_master_0_d_ready       ),
-		.channel_d_valid        (io_master_0_d_valid       ),
-		.channel_d_bits_data    (io_master_0_d_bits_data   ),
-		.channel_d_bits_denied  (io_master_0_d_bits_denied ),
-		.channel_d_bits_corrupt (io_master_0_d_bits_corrupt),
-		.channel_d_bits_opcode  (io_master_0_d_bits_opcode ),
-		.channel_d_bits_param   (io_master_0_d_bits_param  ),
-		.channel_d_bits_sink    (io_master_0_d_bits_sink   ),
-		.channel_d_bits_size    (io_master_0_d_bits_size   ),
-		.channel_d_bits_source  (io_master_0_d_bits_source )
+		.channel_d_ready        (tl_master_d_ready       ),
+		.channel_d_valid        (tl_master_d_valid       ),
+		.channel_d_bits_data    (tl_master_d_bits_data   ),
+		.channel_d_bits_denied  (tl_master_d_bits_denied ),
+		.channel_d_bits_corrupt (tl_master_d_bits_corrupt),
+		.channel_d_bits_opcode  (tl_master_d_bits_opcode ),
+		.channel_d_bits_param   (tl_master_d_bits_param  ),
+		.channel_d_bits_sink    (tl_master_d_bits_sink   ),
+		.channel_d_bits_size    (tl_master_d_bits_size   ),
+		.channel_d_bits_source  (tl_master_d_bits_source )
 	);
 
 	// Rocket Tile
 
-	RocketTile uut (
-		.clock (clock       ),
-		.reset (actual_reset),
-		.constants_hartid(1'b0),
-		.constants_reset_vector(reset_vector),
+	RocketTileWithRVFI rocket_rvfi_tile (
+		.clock                  (clock                    ),
+		.reset                  (actual_reset             ),
 
-`ifndef ROCKET_HIER_REF
 		`RVFI_CONN,
-`endif
 
-		.auto_int_xing_in_1_sync_0 (1'b0),
-		.auto_int_xing_in_0_sync_0 (1'b0),
-		.auto_int_xing_in_0_sync_1 (1'b0),
-		.auto_intsink_in_sync_0 (1'b0),
+		.intsink_sync_0          (1'b0                    ),
+		.int_1_sync_0            (1'b0                    ),
+		.int_0_sync_0            (1'b0                    ),
+		.int_0_sync_1            (1'b0                    ),
 
-		.auto_tl_master_xing_out_a_ready        (io_master_0_a_ready       ),
-		.auto_tl_master_xing_out_a_valid        (io_master_0_a_valid       ),
-		.auto_tl_master_xing_out_a_bits_opcode  (io_master_0_a_bits_opcode ),
-		.auto_tl_master_xing_out_a_bits_param   (io_master_0_a_bits_param  ),
-		.auto_tl_master_xing_out_a_bits_size    (io_master_0_a_bits_size   ),
-		.auto_tl_master_xing_out_a_bits_source  (io_master_0_a_bits_source ),
-		.auto_tl_master_xing_out_a_bits_address (io_master_0_a_bits_address),
-		.auto_tl_master_xing_out_a_bits_mask    (io_master_0_a_bits_mask   ),
-		.auto_tl_master_xing_out_a_bits_data    (io_master_0_a_bits_data   ),
-		.auto_tl_master_xing_out_a_bits_corrupt (io_master_0_a_bits_corrupt),
+		.tl_slave_a_ready        (tl_slave_a_ready        ),
+		.tl_slave_a_valid        (tl_slave_a_valid        ),
+		.tl_slave_a_bits_opcode  (tl_slave_a_bits_opcode  ),
+		.tl_slave_a_bits_param   (tl_slave_a_bits_param   ),
+		.tl_slave_a_bits_size    (tl_slave_a_bits_size    ),
+		.tl_slave_a_bits_source  (tl_slave_a_bits_source  ),
+		.tl_slave_a_bits_address (tl_slave_a_bits_address ),
+		.tl_slave_a_bits_mask    (tl_slave_a_bits_mask    ),
+		.tl_slave_a_bits_data    (tl_slave_a_bits_data    ),
+		.tl_slave_d_ready        (tl_slave_d_ready        ),
+		.tl_slave_d_valid        (tl_slave_d_valid        ),
+		.tl_slave_d_bits_opcode  (tl_slave_d_bits_opcode  ),
+		.tl_slave_d_bits_param   (tl_slave_d_bits_param   ),
+		.tl_slave_d_bits_size    (tl_slave_d_bits_size    ),
+		.tl_slave_d_bits_source  (tl_slave_d_bits_source  ),
+		.tl_slave_d_bits_sink    (tl_slave_d_bits_sink    ),
+		.tl_slave_d_bits_denied  (tl_slave_d_bits_denied  ),
+		.tl_slave_d_bits_data    (tl_slave_d_bits_data    ),
+		.tl_slave_d_bits_corrupt (tl_slave_d_bits_corrupt ),
 
-		.auto_tl_master_xing_out_d_ready        (io_master_0_d_ready       ),
-		.auto_tl_master_xing_out_d_valid        (io_master_0_d_valid       ),
-		.auto_tl_master_xing_out_d_bits_opcode  (io_master_0_d_bits_opcode ),
-		.auto_tl_master_xing_out_d_bits_param   (io_master_0_d_bits_param  ),
-		.auto_tl_master_xing_out_d_bits_size    (io_master_0_d_bits_size   ),
-		.auto_tl_master_xing_out_d_bits_source  (io_master_0_d_bits_source ),
-		.auto_tl_master_xing_out_d_bits_sink    (io_master_0_d_bits_sink   ),
-		.auto_tl_master_xing_out_d_bits_denied  (io_master_0_d_bits_denied ),
-		.auto_tl_master_xing_out_d_bits_data    (io_master_0_d_bits_data   ),
-		.auto_tl_master_xing_out_d_bits_corrupt (io_master_0_d_bits_corrupt),
-
-		.auto_tl_slave_xing_in_a_ready          (io_slave_0_a_ready        ),
-		.auto_tl_slave_xing_in_a_valid          (io_slave_0_a_valid        ),
-		.auto_tl_slave_xing_in_a_bits_opcode    (io_slave_0_a_bits_opcode  ),
-		.auto_tl_slave_xing_in_a_bits_param     (io_slave_0_a_bits_param   ),
-		.auto_tl_slave_xing_in_a_bits_size      (io_slave_0_a_bits_size    ),
-		.auto_tl_slave_xing_in_a_bits_source    (io_slave_0_a_bits_source  ),
-		.auto_tl_slave_xing_in_a_bits_address   (io_slave_0_a_bits_address ),
-		.auto_tl_slave_xing_in_a_bits_mask      (io_slave_0_a_bits_mask    ),
-		.auto_tl_slave_xing_in_a_bits_data      (io_slave_0_a_bits_data    ),
-
-		.auto_tl_slave_xing_in_d_ready          (io_slave_0_d_ready        ),
-		.auto_tl_slave_xing_in_d_valid          (io_slave_0_d_valid        ),
-		.auto_tl_slave_xing_in_d_bits_opcode    (io_slave_0_d_bits_opcode  ),
-		.auto_tl_slave_xing_in_d_bits_size      (io_slave_0_d_bits_size    ),
-		.auto_tl_slave_xing_in_d_bits_source    (io_slave_0_d_bits_source  ),
-		.auto_tl_slave_xing_in_d_bits_data      (io_slave_0_d_bits_data    )
+		.tl_master_a_ready       (tl_master_a_ready       ),
+		.tl_master_a_valid       (tl_master_a_valid       ),
+		.tl_master_a_bits_opcode (tl_master_a_bits_opcode ),
+		.tl_master_a_bits_param  (tl_master_a_bits_param  ),
+		.tl_master_a_bits_size   (tl_master_a_bits_size   ),
+		.tl_master_a_bits_source (tl_master_a_bits_source ),
+		.tl_master_a_bits_address(tl_master_a_bits_address),
+		.tl_master_a_bits_mask   (tl_master_a_bits_mask   ),
+		.tl_master_a_bits_data   (tl_master_a_bits_data   ),
+		.tl_master_a_bits_corrupt(tl_master_a_bits_corrupt),
+		.tl_master_d_ready       (tl_master_d_ready       ),
+		.tl_master_d_valid       (tl_master_d_valid       ),
+		.tl_master_d_bits_opcode (tl_master_d_bits_opcode ),
+		.tl_master_d_bits_param  (tl_master_d_bits_param  ),
+		.tl_master_d_bits_size   (tl_master_d_bits_size   ),
+		.tl_master_d_bits_source (tl_master_d_bits_source ),
+		.tl_master_d_bits_sink   (tl_master_d_bits_sink   ),
+		.tl_master_d_bits_denied (tl_master_d_bits_denied ),
+		.tl_master_d_bits_data   (tl_master_d_bits_data   ),
+		.tl_master_d_bits_corrupt(tl_master_d_bits_corrupt)
 	);
-
-`ifdef ROCKET_HIER_REF
-	assign rvfi_insn = uut.core.rvfi_mon.rvfi_insn;
-	assign rvfi_mem_addr = uut.core.rvfi_mon.rvfi_mem_addr;
-	assign rvfi_mem_rdata = uut.core.rvfi_mon.rvfi_mem_rdata;
-	assign rvfi_mem_rmask = uut.core.rvfi_mon.rvfi_mem_rmask;
-	assign rvfi_mem_wdata = uut.core.rvfi_mon.rvfi_mem_wdata;
-	assign rvfi_mem_wmask = uut.core.rvfi_mon.rvfi_mem_wmask;
-	assign rvfi_order = uut.core.rvfi_mon.rvfi_order;
-	assign rvfi_pc_rdata = uut.core.rvfi_mon.rvfi_pc_rdata;
-	assign rvfi_pc_wdata = uut.core.rvfi_mon.rvfi_pc_wdata;
-	assign rvfi_rd_addr = uut.core.rvfi_mon.rvfi_rd_addr;
-	assign rvfi_rd_wdata = uut.core.rvfi_mon.rvfi_rd_wdata;
-	assign rvfi_rs1_addr = uut.core.rvfi_mon.rvfi_rs1_addr;
-	assign rvfi_rs1_rdata = uut.core.rvfi_mon.rvfi_rs1_rdata;
-	assign rvfi_rs2_addr = uut.core.rvfi_mon.rvfi_rs2_addr;
-	assign rvfi_rs2_rdata = uut.core.rvfi_mon.rvfi_rs2_rdata;
-	assign rvfi_trap = uut.core.rvfi_mon.rvfi_trap;
-	assign rvfi_halt = uut.core.rvfi_mon.rvfi_halt;
-	assign rvfi_intr = uut.core.rvfi_mon.rvfi_intr;
-	assign rvfi_valid = uut.core.rvfi_mon.rvfi_valid;
-`endif
 
 	(* keep *) rvfi_channel #(.CHANNEL_IDX(0)) rvfi_channel_0 (`RVFI_CONN);
 	(* keep *) rvfi_channel #(.CHANNEL_IDX(1)) rvfi_channel_1 (`RVFI_CONN);
@@ -192,7 +172,7 @@ module rocket_pma_map (
 		//  80000000 - 80004000 ARWX  dtim@80000000
 
 		modes_first = 5'b 00000;
-		if (64'h 00000000 <= address_first && address_first < 64'h 00001000) modes_first = 5'b 11110;
+		// if (64'h 00000000 <= address_first && address_first < 64'h 00001000) modes_first = 5'b 11110;
 		if (64'h 00003000 <= address_first && address_first < 64'h 00004000) modes_first = 5'b 11110;
 		if (64'h 00010000 <= address_first && address_first < 64'h 00020000) modes_first = 5'b 01010;
 		if (64'h 02000000 <= address_first && address_first < 64'h 02010000) modes_first = 5'b 11100;
@@ -201,7 +181,7 @@ module rocket_pma_map (
 		if (64'h 80000000 <= address_first && address_first < 64'h 80004000) modes_first = 5'b 11110;
 
 		modes_last = 5'b 00000;
-		if (64'h 00000000 <= address_last && address_last < 64'h 00001000) modes_last = 5'b 11110;
+		// if (64'h 00000000 <= address_last && address_last < 64'h 00001000) modes_last = 5'b 11110;
 		if (64'h 00003000 <= address_last && address_last < 64'h 00004000) modes_last = 5'b 11110;
 		if (64'h 00010000 <= address_last && address_last < 64'h 00020000) modes_last = 5'b 01010;
 		if (64'h 02000000 <= address_last && address_last < 64'h 02010000) modes_last = 5'b 11100;
@@ -333,7 +313,7 @@ module tilelink_ad_dummy (
 				channel_d_bits_source = op_source;
 				channel_d_bits_denied = 0;
 				channel_d_bits_corrupt = 0;
-				next_count = count + (`RISCV_FORMAL_XLEN / 8);
+				next_count = (count + (`RISCV_FORMAL_XLEN / 8)) & 16'hffff;
 				last = next_count >= (1 << op_size);
 				ready = 1;
 			end
@@ -382,33 +362,24 @@ module tilelink_ad_dummy (
 	end
 endmodule
 
-`ifdef ROCKET_HIER_REF
-module RVFIMonitor (
-	input clock,
-	input reset,
-	`RVFI_INPUTS,
-	output errcode
-);
-	assign errcode = 0;
-endmodule
-`endif
-
 `ifndef ROCKET_INIT
 module MulDiv (
 	input         clock,
 	input         reset,
-	output        io_req_ready,
-	input         io_req_valid,
-	input  [3:0]  io_req_bits_fn,
-	input         io_req_bits_dw,
-	input  [63:0] io_req_bits_in1,
-	input  [63:0] io_req_bits_in2,
-	input  [4:0]  io_req_bits_tag,
-	input         io_kill,
-	input         io_resp_ready,
+	output        io__req_ready,
+	input         io__req_valid,
+	input  [ 3:0] io__req_bits_fn,
+	input         io__req_bits_dw,
+	input  [63:0] io__req_bits_in1,
+	input  [63:0] io__req_bits_in2,
+	input  [ 4:0] io__req_bits_tag,
+	input         io__kill,
+	input         io__resp_ready,
+	output        io__resp_valid,
+	output [63:0] io__resp_bits_data,
+	output [ 4:0] io__resp_bits_tag,
 	output        io_resp_valid,
-	output [63:0] io_resp_bits_data,
-	output [4:0]  io_resp_bits_tag
+	output        io_resp_ready
 );
 	reg [63:0] internal_data;
 	reg [ 4:0] internal_tag;
@@ -419,39 +390,42 @@ module MulDiv (
 
 	always @* begin
 		result = 123456789;
-		case (io_req_bits_fn)
-			0: result = (io_req_bits_in1 + io_req_bits_in2) ^ 64'h 2cdf52a55876063e; // MUL
-			1: result = (io_req_bits_in1 + io_req_bits_in2) ^ 64'h 15d01651f6583fb7; // MULH
-			2: result = (io_req_bits_in1 - io_req_bits_in2) ^ 64'h ea3969edecfbe137; // MULHSU
-			3: result = (io_req_bits_in1 + io_req_bits_in2) ^ 64'h d13db50d949ce5e8; // MULHU
-			4: result = (io_req_bits_in1 - io_req_bits_in2) ^ 64'h 29bbf66f7f8529ec; // DIV
-			5: result = (io_req_bits_in1 - io_req_bits_in2) ^ 64'h 8c629acb10e8fd70; // DIVU
-			6: result = (io_req_bits_in1 - io_req_bits_in2) ^ 64'h f5b7d8538da68fa5; // REM
-			7: result = (io_req_bits_in1 - io_req_bits_in2) ^ 64'h bc4402413138d0e1; // REMU
+		case (io__req_bits_fn)
+			0: result = (io__req_bits_in1 + io__req_bits_in2) ^ 64'h 2cdf52a55876063e; // MUL
+			1: result = (io__req_bits_in1 + io__req_bits_in2) ^ 64'h 15d01651f6583fb7; // MULH
+			2: result = (io__req_bits_in1 - io__req_bits_in2) ^ 64'h ea3969edecfbe137; // MULHSU
+			3: result = (io__req_bits_in1 + io__req_bits_in2) ^ 64'h d13db50d949ce5e8; // MULHU
+			4: result = (io__req_bits_in1 - io__req_bits_in2) ^ 64'h 29bbf66f7f8529ec; // DIV
+			5: result = (io__req_bits_in1 - io__req_bits_in2) ^ 64'h 8c629acb10e8fd70; // DIVU
+			6: result = (io__req_bits_in1 - io__req_bits_in2) ^ 64'h f5b7d8538da68fa5; // REM
+			7: result = (io__req_bits_in1 - io__req_bits_in2) ^ 64'h bc4402413138d0e1; // REMU
 		endcase
-		if (!io_req_bits_dw) begin
+		if (!io__req_bits_dw) begin
 			result = $signed(result << 32) >>> 32;
 		end
 	end
 
 `ifdef RISCV_FORMAL_FAIRNESS
-	assign io_req_ready = !internal_busy;
+	assign io__req_ready = !internal_busy;
 `else
-	assign io_req_ready = $anyseq(1) && !internal_busy;
+	assign io__req_ready = $anyseq(1) && !internal_busy;
 `endif
 
-	assign io_resp_valid = internal_done;
-	assign io_resp_bits_data = internal_done ? internal_data : $anyseq(64);
-	assign io_resp_bits_tag = internal_done ? internal_tag : $anyseq(5);
+	assign io__resp_valid = internal_done;
+	assign io__resp_bits_data = internal_done ? internal_data : $anyseq(64);
+	assign io__resp_bits_tag = internal_done ? internal_tag : $anyseq(5);
+
+	assign io_resp_valid = io__resp_valid;
+	assign io_resp_ready = io__resp_ready;
 
 	always @(posedge clock) begin
-		if (reset || io_kill) begin
+		if (reset || io__kill) begin
 			internal_busy <= 0;
 			internal_done <= 0;
 		end else begin
-			if (io_req_ready && io_req_valid) begin
+			if (io__req_ready && io__req_valid) begin
 				internal_data <= result;
-				internal_tag <= io_req_bits_tag;
+				internal_tag <= io__req_bits_tag;
 				internal_busy <= 1;
 			end
 
@@ -465,7 +439,7 @@ module MulDiv (
 			end
 `endif
 
-			if (io_resp_ready && io_resp_valid) begin
+			if (io__resp_ready && io__resp_valid) begin
 				internal_busy <= 0;
 				internal_done <= 0;
 			end

@@ -18,6 +18,7 @@ The Interface consists only of output signals. Each signal is a concatenation of
     output [NRET        - 1 : 0] rvfi_halt
     output [NRET        - 1 : 0] rvfi_intr
     output [NRET * 2    - 1 : 0] rvfi_mode
+    output [NRET * 2    - 1 : 0] rvfi_ixl
 
 When the core retires an instruction, it asserts the `rvfi_valid` signal and uses the signals described below to output the details of the retired instruction. The signals below are only valid during such a cycle and can be driven to arbitrary values in a cycle in which `rvfi_valid` is not asserted.
 
@@ -33,7 +34,9 @@ The signal `rvfi_halt` must be set when the instruction is the last instruction 
 
 `rvfi_intr` must be set for the first instruction that is part of a trap handler, i.e. an instruction that has a `rvfi_pc_rdata` that does not match the `rvfi_pc_wdata` of the previous instruction.
 
-Finally `rvfi_mode` must be set to the current privilege level, using the following encoding: 0=U-Mode, 1=S-Mode, 2=Reserved, 3=M-Mode
+`rvfi_mode` must be set to the current privilege level, using the following encoding: 0=U-Mode, 1=S-Mode, 2=Reserved, 3=M-Mode
+
+Finally `rvfi_ixl` must be set to the value of MXL/SXL/UXL in the current privilege level, using the following encoding: 1=32, 2=64
 
 ### Integer Register Read/Write
 
@@ -129,6 +132,19 @@ via RVFI by the core under test.
 See [RISC-V Formal CSR Sematics](csrs.md) for the exact semantics of CSR values
 output via RVFI.
 
+### Handling of Speculative Execution
+
+Out-of-order cores that execute speculatively can commit speculative instructions on RVFI.
+
+Rollbacks must be output via the rollback interface, that is enabled when `RISCV_FORMAL_ROLLBACK` is defined:
+
+    output [ 0 : 0] rvfi_rollback_valid
+    output [63 : 0] rvfi_rollback_order
+
+All RVFI packets output _prior_ to the cycle with asserted `rvfi_rollback_valid` with a `rvfi_order` field of _greater or equal_ to `rvfi_rollback_order` are invalidated by a rollback event.
+
+RVFI packets output in the same cycle as `rvfi_rollback_valid` are already part of the new instruction stream re-starting at the instruction number indicated in `rvfi_rollback_order`.
+
 
 RVFI TODOs and Requests for Comments
 ------------------------------------
@@ -167,6 +183,59 @@ The following is the proposed RVFI extension for floating point ISAs:
 Since `f0` is not a zero register, additional `*_[rw]valid` signals are required to indicate if `frs1`, `frs2`, `frs3`, and `frd` and their corresponding pre- or post-values are valid.
 
 Alternative arithmetic operations (`RISCV_FORMAL_ALTOPS`) will be defined for all non-trivial floating point operations.
+
+### Modelling of Virtual Memory
+
+For processors with support for S-mode and virtual memory we define the following additional RVFI signals for data load/stores:
+
+    output [NRET *   64 - 1 : 0] rvfi_mem_paddr
+    output [NRET * XLEN - 1 : 0] rvfi_mem_pte0
+    output [NRET * XLEN - 1 : 0] rvfi_mem_pte1
+    output [NRET * XLEN - 1 : 0] rvfi_mem_pte2
+    output [NRET * XLEN - 1 : 0] rvfi_mem_pte3
+
+And the following additional RVFI signals for instruction fetches:
+
+    output [NRET *   64 - 1 : 0] rvfi_pc_paddr
+    output [NRET * XLEN - 1 : 0] rvfi_pc_pte0
+    output [NRET * XLEN - 1 : 0] rvfi_pc_pte1
+    output [NRET * XLEN - 1 : 0] rvfi_pc_pte2
+    output [NRET * XLEN - 1 : 0] rvfi_pc_pte3
+
+And we require that the `satp` CSR is observable through RVFI:
+
+    output [NRET * XLEN - 1 : 0] rvfi_csr_satp_rmask
+    output [NRET * XLEN - 1 : 0] rvfi_csr_satp_wmask
+    output [NRET * XLEN - 1 : 0] rvfi_csr_satp_rdata
+    output [NRET * XLEN - 1 : 0] rvfi_csr_satp_wdata
+
+The `rvfi_mem_paddr` field carries the physical address of the memory access. The `rvfi_mem_pte[0123]` fields carry the values of the page table entries used to convert `rvfi_mem_addr` to `rvfi_mem_paddr`. Unused `rvfi_mem_pte[0123]` fields must always be set to zero.
+
+For memory accesses in M-mode, or with `satp.MODE=0`, `rvfi_mem_paddr` must have the same value as `rvfi_mem_addr` and all four `rvfi_mem_pte[0123]` fields must be set to zero.
+
+For example in Sv32 mode, modulo missing fences, `rvfi_mem_pte1` must carry the value of the 32-bit word at the following memory location:
+
+```
+pt1 = rvfi_csr_satp_rdata & 0x003fffff
+vpn1 = (rvfi_mem_addr >> 22) & 0x3ff
+pte1_addr = (pt1 << 12) | (vpn1 << 2)
+```
+
+And `rvfi_mem_pte0` must carry the value of the 32-bit word at the following memory location (or zero if `pte1.X` or `pte1.R` or `!pte1.V`):
+
+```
+pt0 = rvfi_mem_pte1 >> 10
+vpn0 = (rvfi_mem_addr >> 12) & 0x3ff
+pte0_addr = (pt0 << 12) | (vpn0 << 2)
+```
+
+Finally, `rvfi_mem_paddr` must be set to the following address:
+
+```
+ppn = rvfi_mem_pte0 >> 10
+offset = rvfi_mem_addr & 0xfff
+rvfi_mem_paddr = (ppn << 12) | offset
+```
 
 ### Modelling of Atomic Memory Operations
 

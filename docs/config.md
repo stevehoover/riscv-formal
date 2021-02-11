@@ -44,10 +44,25 @@ RISCV_FORMAL_ILEN
 The maximum width of an instruction retired by the core. For cores supporting
 fused instructions this is the maximum length of a complete fused instruction.
 
+RISCV_FORMAL_UMODE
+------------------
+
+This macro must be defined when the core under tests supports U-mode.
+
+RISCV_FORMAL_SMODE
+------------------
+
+This macro must be defined when the core under tests supports S-mode.
+
 RISCV_FORMAL_COMPRESSED
 -----------------------
 
 For cores supporting the RISC-V Compressed ISA this define must be set.
+
+RISCV_FORMAL_ALTOPS
+-------------------
+
+This macro must be defined if the core under tests implements [alternative arithmetic semantic](https://github.com/SymbioticEDA/riscv-formal/blob/master/docs/rvfi.md#alternative-arithmetic-operations).
 
 RISCV_FORMAL_ALIGNED_MEM
 ------------------------
@@ -81,8 +96,15 @@ peripherals and abstractions to decide if fairness guarantees should be enabled.
 RISCV_FORMAL_VALIDADDR(addr)
 ----------------------------
 
-Set this to an expression of addr that evaluates to 1 when the given address
+Set this to an expression of `addr` that evaluates to 1 when the given address
 is a valid physical address for the processor under test.
+
+RISCV_FORMAL_WAITINSN(insn)
+---------------------------
+
+Set this to an expression of `insn` that evaluates to 1 when the given instruction
+is a wait instruction similar to WFI. (WFI does not need to be recognized by the
+expression. This is for non-standard instructions in addition to WFI.)
 
 RISCV_FORMAL_PMA_MAP
 --------------------

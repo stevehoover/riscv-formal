@@ -258,6 +258,32 @@ wire [64 - 1 : 0] csr_minstret_wdata  = rvfi_csr_minstret_wdata  [(_idx)*64 +: 6
 `define rvformal_csr_minstret_conn
 `endif
 
+`ifdef RISCV_FORMAL_ROLLBACK
+`define rvformal_rollback_wires          (* keep *) wire [0:0] rvfi_rollback_valid; (* keep *) wire [63:0] rvfi_rollback_order;
+`define rvformal_rollback_outputs        , output [0:0] rvfi_rollback_valid, output [63:0] rvfi_rollback_order
+`define rvformal_rollback_inputs         , input [0:0] rvfi_rollback_valid, input [63:0] rvfi_rollback_order
+`define rvformal_rollback_conn           , .rvfi_rollback_valid(rvfi_rollback_valid), .rvfi_rollback_order(rvfi_rollback_order)
+`else
+`define rvformal_rollback_wires
+`define rvformal_rollback_outputs
+`define rvformal_rollback_inputs
+`define rvformal_rollback_conn
+`endif
+
+`ifdef RISCV_FORMAL_EXTAMO
+`define rvformal_extamo_wires          (* keep *) wire [`RISCV_FORMAL_NRET-1:0] rvfi_mem_extamo;
+`define rvformal_extamo_outputs        , output [`RISCV_FORMAL_NRET-1:0] rvfi_mem_extamo
+`define rvformal_extamo_inputs         , input [`RISCV_FORMAL_NRET-1:0] rvfi_mem_extamo
+`define rvformal_extamo_channel(_idx)  wire mem_extamo  = rvfi_mem_extamo [_idx];
+`define rvformal_extamo_conn           , .rvfi_mem_extamo(rvfi_mem_extamo)
+`else
+`define rvformal_extamo_wires
+`define rvformal_extamo_outputs
+`define rvformal_extamo_inputs
+`define rvformal_extamo_channel(_idx)
+`define rvformal_extamo_conn
+`endif
+
 `define RVFI_WIRES                                                                   \
 (* keep *) wire [`RISCV_FORMAL_NRET                        - 1 : 0] rvfi_valid;      \
 (* keep *) wire [`RISCV_FORMAL_NRET *                 64   - 1 : 0] rvfi_order;      \
@@ -265,6 +291,8 @@ wire [64 - 1 : 0] csr_minstret_wdata  = rvfi_csr_minstret_wdata  [(_idx)*64 +: 6
 (* keep *) wire [`RISCV_FORMAL_NRET                        - 1 : 0] rvfi_trap;       \
 (* keep *) wire [`RISCV_FORMAL_NRET                        - 1 : 0] rvfi_halt;       \
 (* keep *) wire [`RISCV_FORMAL_NRET                        - 1 : 0] rvfi_intr;       \
+(* keep *) wire [`RISCV_FORMAL_NRET *                  2   - 1 : 0] rvfi_mode;       \
+(* keep *) wire [`RISCV_FORMAL_NRET *                  2   - 1 : 0] rvfi_ixl;        \
 (* keep *) wire [`RISCV_FORMAL_NRET *                  5   - 1 : 0] rvfi_rs1_addr;   \
 (* keep *) wire [`RISCV_FORMAL_NRET *                  5   - 1 : 0] rvfi_rs2_addr;   \
 (* keep *) wire [`RISCV_FORMAL_NRET * `RISCV_FORMAL_XLEN   - 1 : 0] rvfi_rs1_rdata;  \
@@ -278,6 +306,8 @@ wire [64 - 1 : 0] csr_minstret_wdata  = rvfi_csr_minstret_wdata  [(_idx)*64 +: 6
 (* keep *) wire [`RISCV_FORMAL_NRET * `RISCV_FORMAL_XLEN/8 - 1 : 0] rvfi_mem_wmask;  \
 (* keep *) wire [`RISCV_FORMAL_NRET * `RISCV_FORMAL_XLEN   - 1 : 0] rvfi_mem_rdata;  \
 (* keep *) wire [`RISCV_FORMAL_NRET * `RISCV_FORMAL_XLEN   - 1 : 0] rvfi_mem_wdata;  \
+`rvformal_rollback_wires \
+`rvformal_extamo_wires \
 `rvformal_csr_fflags_wires \
 `rvformal_csr_frm_wires \
 `rvformal_csr_fcsr_wires \
@@ -293,6 +323,8 @@ output [`RISCV_FORMAL_NRET * `RISCV_FORMAL_ILEN   - 1 : 0] rvfi_insn,       \
 output [`RISCV_FORMAL_NRET                        - 1 : 0] rvfi_trap,       \
 output [`RISCV_FORMAL_NRET                        - 1 : 0] rvfi_halt,       \
 output [`RISCV_FORMAL_NRET                        - 1 : 0] rvfi_intr,       \
+output [`RISCV_FORMAL_NRET *                  2   - 1 : 0] rvfi_mode,       \
+output [`RISCV_FORMAL_NRET *                  2   - 1 : 0] rvfi_ixl,        \
 output [`RISCV_FORMAL_NRET *                  5   - 1 : 0] rvfi_rs1_addr,   \
 output [`RISCV_FORMAL_NRET *                  5   - 1 : 0] rvfi_rs2_addr,   \
 output [`RISCV_FORMAL_NRET * `RISCV_FORMAL_XLEN   - 1 : 0] rvfi_rs1_rdata,  \
@@ -306,6 +338,8 @@ output [`RISCV_FORMAL_NRET * `RISCV_FORMAL_XLEN/8 - 1 : 0] rvfi_mem_rmask,  \
 output [`RISCV_FORMAL_NRET * `RISCV_FORMAL_XLEN/8 - 1 : 0] rvfi_mem_wmask,  \
 output [`RISCV_FORMAL_NRET * `RISCV_FORMAL_XLEN   - 1 : 0] rvfi_mem_rdata,  \
 output [`RISCV_FORMAL_NRET * `RISCV_FORMAL_XLEN   - 1 : 0] rvfi_mem_wdata   \
+`rvformal_rollback_outputs \
+`rvformal_extamo_outputs \
 `rvformal_csr_fflags_outputs \
 `rvformal_csr_frm_outputs \
 `rvformal_csr_fcsr_outputs \
@@ -321,6 +355,8 @@ input [`RISCV_FORMAL_NRET * `RISCV_FORMAL_ILEN   - 1 : 0] rvfi_insn,       \
 input [`RISCV_FORMAL_NRET                        - 1 : 0] rvfi_trap,       \
 input [`RISCV_FORMAL_NRET                        - 1 : 0] rvfi_halt,       \
 input [`RISCV_FORMAL_NRET                        - 1 : 0] rvfi_intr,       \
+input [`RISCV_FORMAL_NRET *                  2   - 1 : 0] rvfi_mode,       \
+input [`RISCV_FORMAL_NRET *                  2   - 1 : 0] rvfi_ixl,        \
 input [`RISCV_FORMAL_NRET *                  5   - 1 : 0] rvfi_rs1_addr,   \
 input [`RISCV_FORMAL_NRET *                  5   - 1 : 0] rvfi_rs2_addr,   \
 input [`RISCV_FORMAL_NRET * `RISCV_FORMAL_XLEN   - 1 : 0] rvfi_rs1_rdata,  \
@@ -334,6 +370,8 @@ input [`RISCV_FORMAL_NRET * `RISCV_FORMAL_XLEN/8 - 1 : 0] rvfi_mem_rmask,  \
 input [`RISCV_FORMAL_NRET * `RISCV_FORMAL_XLEN/8 - 1 : 0] rvfi_mem_wmask,  \
 input [`RISCV_FORMAL_NRET * `RISCV_FORMAL_XLEN   - 1 : 0] rvfi_mem_rdata,  \
 input [`RISCV_FORMAL_NRET * `RISCV_FORMAL_XLEN   - 1 : 0] rvfi_mem_wdata   \
+`rvformal_rollback_inputs \
+`rvformal_extamo_inputs \
 `rvformal_csr_fflags_inputs \
 `rvformal_csr_frm_inputs \
 `rvformal_csr_fcsr_inputs \
@@ -342,14 +380,15 @@ input [`RISCV_FORMAL_NRET * `RISCV_FORMAL_XLEN   - 1 : 0] rvfi_mem_wdata   \
 `rvformal_csr_mcycle_inputs \
 `rvformal_csr_minstret_inputs
 
-`define RVFI_CHANNEL(_name, _idx) \
-generate if(1) begin:_name \
+`define RVFI_GETCHANNEL(_idx) \
 wire [                 1   - 1 : 0] valid      = rvfi_valid      [(_idx)*(                 1  )  +:                  1  ]; \
 wire [                64   - 1 : 0] order      = rvfi_order      [(_idx)*(                64  )  +:                 64  ]; \
 wire [`RISCV_FORMAL_ILEN   - 1 : 0] insn       = rvfi_insn       [(_idx)*(`RISCV_FORMAL_ILEN  )  +: `RISCV_FORMAL_ILEN  ]; \
 wire [                 1   - 1 : 0] trap       = rvfi_trap       [(_idx)*(                 1  )  +:                  1  ]; \
 wire [                 1   - 1 : 0] halt       = rvfi_halt       [(_idx)*(                 1  )  +:                  1  ]; \
 wire [                 1   - 1 : 0] intr       = rvfi_intr       [(_idx)*(                 1  )  +:                  1  ]; \
+wire [                 2   - 1 : 0] mode       = rvfi_mode       [(_idx)*(                 2  )  +:                  2  ]; \
+wire [                 2   - 1 : 0] ixl        = rvfi_ixl        [(_idx)*(                 2  )  +:                  2  ]; \
 wire [                 5   - 1 : 0] rs1_addr   = rvfi_rs1_addr   [(_idx)*(                 5  )  +:                  5  ]; \
 wire [                 5   - 1 : 0] rs2_addr   = rvfi_rs2_addr   [(_idx)*(                 5  )  +:                  5  ]; \
 wire [`RISCV_FORMAL_XLEN   - 1 : 0] rs1_rdata  = rvfi_rs1_rdata  [(_idx)*(`RISCV_FORMAL_XLEN  )  +: `RISCV_FORMAL_XLEN  ]; \
@@ -363,6 +402,7 @@ wire [`RISCV_FORMAL_XLEN/8 - 1 : 0] mem_rmask  = rvfi_mem_rmask  [(_idx)*(`RISCV
 wire [`RISCV_FORMAL_XLEN/8 - 1 : 0] mem_wmask  = rvfi_mem_wmask  [(_idx)*(`RISCV_FORMAL_XLEN/8)  +: `RISCV_FORMAL_XLEN/8]; \
 wire [`RISCV_FORMAL_XLEN   - 1 : 0] mem_rdata  = rvfi_mem_rdata  [(_idx)*(`RISCV_FORMAL_XLEN  )  +: `RISCV_FORMAL_XLEN  ]; \
 wire [`RISCV_FORMAL_XLEN   - 1 : 0] mem_wdata  = rvfi_mem_wdata  [(_idx)*(`RISCV_FORMAL_XLEN  )  +: `RISCV_FORMAL_XLEN  ]; \
+`rvformal_extamo_channel(_idx) \
 `rvformal_csr_fflags_channel(_idx) \
 `rvformal_csr_frm_channel(_idx) \
 `rvformal_csr_fcsr_channel(_idx) \
@@ -370,6 +410,10 @@ wire [`RISCV_FORMAL_XLEN   - 1 : 0] mem_wdata  = rvfi_mem_wdata  [(_idx)*(`RISCV
 `rvformal_csr_time_channel(_idx) \
 `rvformal_csr_mcycle_channel(_idx) \
 `rvformal_csr_minstret_channel(_idx) \
+
+`define RVFI_CHANNEL(_name, _idx) \
+generate if(1) begin:_name \
+  `RVFI_GETCHANNEL(_idx) \
 end endgenerate
 
 `define RVFI_CONN                  \
@@ -379,6 +423,8 @@ end endgenerate
 .rvfi_trap      (rvfi_trap     ),  \
 .rvfi_halt      (rvfi_halt     ),  \
 .rvfi_intr      (rvfi_intr     ),  \
+.rvfi_mode      (rvfi_mode     ),  \
+.rvfi_ixl       (rvfi_ixl      ),  \
 .rvfi_rs1_addr  (rvfi_rs1_addr ),  \
 .rvfi_rs2_addr  (rvfi_rs2_addr ),  \
 .rvfi_rs1_rdata (rvfi_rs1_rdata),  \
@@ -392,6 +438,8 @@ end endgenerate
 .rvfi_mem_wmask (rvfi_mem_wmask),  \
 .rvfi_mem_rdata (rvfi_mem_rdata),  \
 .rvfi_mem_wdata (rvfi_mem_wdata)   \
+`rvformal_rollback_conn \
+`rvformal_extamo_conn \
 `rvformal_csr_fflags_conn \
 `rvformal_csr_frm_conn \
 `rvformal_csr_fcsr_conn \

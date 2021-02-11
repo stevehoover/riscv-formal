@@ -1,12 +1,16 @@
 // DO NOT EDIT -- auto-generated from riscv-formal/insns/generate.py
 
 module rvfi_insn_divw (
-  input                                rvfi_valid,
-  input [`RISCV_FORMAL_ILEN   - 1 : 0] rvfi_insn,
-  input [`RISCV_FORMAL_XLEN   - 1 : 0] rvfi_pc_rdata,
-  input [`RISCV_FORMAL_XLEN   - 1 : 0] rvfi_rs1_rdata,
-  input [`RISCV_FORMAL_XLEN   - 1 : 0] rvfi_rs2_rdata,
-  input [`RISCV_FORMAL_XLEN   - 1 : 0] rvfi_mem_rdata,
+  input                                 rvfi_valid,
+  input  [`RISCV_FORMAL_ILEN   - 1 : 0] rvfi_insn,
+  input  [`RISCV_FORMAL_XLEN   - 1 : 0] rvfi_pc_rdata,
+  input  [`RISCV_FORMAL_XLEN   - 1 : 0] rvfi_rs1_rdata,
+  input  [`RISCV_FORMAL_XLEN   - 1 : 0] rvfi_rs2_rdata,
+  input  [`RISCV_FORMAL_XLEN   - 1 : 0] rvfi_mem_rdata,
+`ifdef RISCV_FORMAL_CSR_MISA
+  input  [`RISCV_FORMAL_XLEN   - 1 : 0] rvfi_csr_misa_rdata,
+  output [`RISCV_FORMAL_XLEN   - 1 : 0] spec_csr_misa_rmask,
+`endif
 
   output                                spec_valid,
   output                                spec_trap,
@@ -30,12 +34,21 @@ module rvfi_insn_divw (
   wire [4:0] insn_rd     = rvfi_insn[11: 7];
   wire [6:0] insn_opcode = rvfi_insn[ 6: 0];
 
+`ifdef RISCV_FORMAL_CSR_MISA
+  wire misa_ok = (rvfi_csr_misa_rdata & `RISCV_FORMAL_XLEN'h 1000) == `RISCV_FORMAL_XLEN'h 1000;
+  assign spec_csr_misa_rmask = `RISCV_FORMAL_XLEN'h 1000;
+`else
+  wire misa_ok = 1;
+`endif
+
   // DIVW instruction
 `ifdef RISCV_FORMAL_ALTOPS
   wire [31:0] altops_bitmask = 64'h29bbf66f7f8529ec;
   wire [31:0] result = (rvfi_rs1_rdata - rvfi_rs2_rdata) ^ altops_bitmask;
 `else
-  wire [31:0] result = $signed(rvfi_rs1_rdata[31:0]) / $signed(rvfi_rs2_rdata[31:0]);
+  wire [31:0] result = rvfi_rs2_rdata[31:0] == 32'b0 ? {32{1'b1}} :
+                       rvfi_rs1_rdata == {1'b1, {31{1'b0}}} && rvfi_rs2_rdata == {32{1'b1}} ? {1'b1, {31{1'b0}}} :
+                       $signed(rvfi_rs1_rdata[31:0]) / $signed(rvfi_rs2_rdata[31:0]);
 `endif
   assign spec_valid = rvfi_valid && !insn_padding && insn_funct7 == 7'b 0000001 && insn_funct3 == 3'b 100 && insn_opcode == 7'b 0111011;
   assign spec_rs1_addr = insn_rs1;
@@ -45,7 +58,7 @@ module rvfi_insn_divw (
   assign spec_pc_wdata = rvfi_pc_rdata + 4;
 
   // default assignments
-  assign spec_trap = 0;
+  assign spec_trap = !misa_ok;
   assign spec_mem_addr = 0;
   assign spec_mem_rmask = 0;
   assign spec_mem_wmask = 0;

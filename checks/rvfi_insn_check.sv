@@ -42,6 +42,12 @@ module rvfi_insn_check (
 		(* keep *) wire [`RISCV_FORMAL_XLEN   - 1 : 0] mem_rdata = rvfi_mem_rdata[channel_idx*`RISCV_FORMAL_XLEN   +: `RISCV_FORMAL_XLEN];
 		(* keep *) wire [`RISCV_FORMAL_XLEN   - 1 : 0] mem_wdata = rvfi_mem_wdata[channel_idx*`RISCV_FORMAL_XLEN   +: `RISCV_FORMAL_XLEN];
 
+`ifdef RISCV_FORMAL_CSR_MISA
+		(* keep *) wire [`RISCV_FORMAL_XLEN   - 1 : 0] csr_misa_rdata = rvfi_csr_misa_rdata[channel_idx*`RISCV_FORMAL_XLEN   +: `RISCV_FORMAL_XLEN];
+		(* keep *) wire [`RISCV_FORMAL_XLEN   - 1 : 0] csr_misa_rmask = rvfi_csr_misa_rmask[channel_idx*`RISCV_FORMAL_XLEN   +: `RISCV_FORMAL_XLEN];
+		(* keep *) wire [`RISCV_FORMAL_XLEN   - 1 : 0] spec_csr_misa_rmask;
+`endif
+
 		(* keep *) wire                                spec_valid;
 		(* keep *) wire                                spec_trap;
 		(* keep *) wire [                       4 : 0] spec_rs1_addr;
@@ -54,25 +60,33 @@ module rvfi_insn_check (
 		(* keep *) wire [`RISCV_FORMAL_XLEN/8 - 1 : 0] spec_mem_wmask;
 		(* keep *) wire [`RISCV_FORMAL_XLEN   - 1 : 0] spec_mem_wdata;
 
-		`RISCV_FORMAL_INSN_MODEL insn_spec (
-			.rvfi_valid    (valid    ),
-			.rvfi_insn     (insn     ),
-			.rvfi_pc_rdata (pc_rdata ),
-			.rvfi_rs1_rdata(rs1_rdata),
-			.rvfi_rs2_rdata(rs2_rdata),
-			.rvfi_mem_rdata(mem_rdata),
+		(* keep *) wire [`RISCV_FORMAL_XLEN   - 1 : 0] rs1_rdata_or_zero = spec_rs1_addr != 0 ? rs1_rdata : 0;
+		(* keep *) wire [`RISCV_FORMAL_XLEN   - 1 : 0] rs2_rdata_or_zero = spec_rs2_addr != 0 ? rs2_rdata : 0;
 
-			.spec_valid    (spec_valid    ),
-			.spec_trap     (spec_trap     ),
-			.spec_rs1_addr (spec_rs1_addr ),
-			.spec_rs2_addr (spec_rs2_addr ),
-			.spec_rd_addr  (spec_rd_addr  ),
-			.spec_rd_wdata (spec_rd_wdata ),
-			.spec_pc_wdata (spec_pc_wdata ),
-			.spec_mem_addr (spec_mem_addr ),
-			.spec_mem_rmask(spec_mem_rmask),
-			.spec_mem_wmask(spec_mem_wmask),
-			.spec_mem_wdata(spec_mem_wdata)
+		`RISCV_FORMAL_INSN_MODEL insn_spec (
+			.rvfi_valid          (valid              ),
+			.rvfi_insn           (insn               ),
+			.rvfi_pc_rdata       (pc_rdata           ),
+			.rvfi_rs1_rdata      (rs1_rdata_or_zero  ),
+			.rvfi_rs2_rdata      (rs2_rdata_or_zero  ),
+			.rvfi_mem_rdata      (mem_rdata          ),
+
+`ifdef RISCV_FORMAL_CSR_MISA
+			.rvfi_csr_misa_rdata (csr_misa_rdata     ),
+			.spec_csr_misa_rmask (spec_csr_misa_rmask),
+`endif
+
+			.spec_valid          (spec_valid         ),
+			.spec_trap           (spec_trap          ),
+			.spec_rs1_addr       (spec_rs1_addr      ),
+			.spec_rs2_addr       (spec_rs2_addr      ),
+			.spec_rd_addr        (spec_rd_addr       ),
+			.spec_rd_wdata       (spec_rd_wdata      ),
+			.spec_pc_wdata       (spec_pc_wdata      ),
+			.spec_mem_addr       (spec_mem_addr      ),
+			.spec_mem_rmask      (spec_mem_rmask     ),
+			.spec_mem_wmask      (spec_mem_wmask     ),
+			.spec_mem_wdata      (spec_mem_wdata     )
 		);
 
 		wire insn_pma_x, mem_pma_r, mem_pma_w;
@@ -122,10 +136,23 @@ module rvfi_insn_check (
 					assert(rd_wdata == 0);
 					assert(mem_wmask == 0);
 				end else begin
-					assert(spec_rs1_addr == rs1_addr);
-					assert(spec_rs2_addr == rs2_addr);
+`ifdef RISCV_FORMAL_CSR_MISA
+					assert((spec_csr_misa_rmask & csr_misa_rmask) == spec_csr_misa_rmask);
+`endif
+
+					if (rs1_addr == 0)
+						assert(rs1_rdata == 0);
+
+					if (rs2_addr == 0)
+						assert(rs2_rdata == 0);
 
 					if (!spec_trap) begin
+						if (spec_rs1_addr != 0)
+							assert(spec_rs1_addr == rs1_addr);
+
+						if (spec_rs2_addr != 0)
+							assert(spec_rs2_addr == rs2_addr);
+
 						assert(spec_rd_addr == rd_addr);
 						assert(spec_rd_wdata == rd_wdata);
 						assert(`rvformal_addr_eq(spec_pc_wdata, pc_wdata));
