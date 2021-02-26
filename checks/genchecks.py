@@ -14,7 +14,7 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-import os, sys, shutil, re, getopt
+import os, sys, shutil, re
 
 nret = 1
 isa = "rv32i"
@@ -44,28 +44,6 @@ if len(sys.argv) > 1:
         basedir = sys.argv[2]
     if len(sys.argv) > 3:
         incdir = sys.argv[3]
-
-def usage():
-    print("Usage: " + sys.argv[0] + " [--basedir <riscv-formal-repo-dir>] [<checks-dir>]")
-    sys.exit(1)
-
-try:
-    opts, argv = getopt.getopt(sys.argv[1:], "", ["basedir="])
-except getopt.GetoptError:
-    usage()
-for opt, val in opts:
-    if opt == "--basedir":
-        basedir = val
-if len(argv) > 1:
-    cfgname = argv[1]
-    if len(argv) > 2:
-        usage()
-
-# basedir must be absolute.
-if (basedir[0] != "/"):
-    basedir = "%s/%s" % (os.getcwd(), basedir)
-
-# Read config file.
 
 print("Reading %s.cfg." % cfgname)
 with open("%s.cfg" % cfgname, "r") as f:
