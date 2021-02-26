@@ -28,7 +28,8 @@ groups = [None]
 blackbox = False
 
 cfgname = "checks"
-basedir = "../.." # Assuming run from within riscv-formal/cores/<core>. Relative path for now.
+basedir = "%s/../.." % os.getcwd()
+incdir = basedir
 corename = os.getcwd().split("/")[-1]
 solver = "boolector"
 dumpsmt2 = False
@@ -36,7 +37,13 @@ sbycmd = "sby"
 config = dict()
 mode = "bmc"
 
-# Parse command-line options.
+if len(sys.argv) > 1:
+    assert 2 <= len(sys.argv) <= 4
+    cfgname = sys.argv[1]
+    if len(sys.argv) > 2:
+        basedir = sys.argv[2]
+    if len(sys.argv) > 3:
+        incdir = sys.argv[3]
 
 def usage():
     print("Usage: " + sys.argv[0] + " [--basedir <riscv-formal-repo-dir>] [<checks-dir>]")
@@ -154,6 +161,7 @@ def print_hfmt(f, text, **kwargs):
 
 hargs = dict()
 hargs["basedir"] = basedir
+hargs["incdir"] = incdir
 hargs["core"] = corename
 hargs["nret"] = nret
 hargs["xlen"] = xlen
@@ -353,7 +361,7 @@ def check_insn(grp, insn, chanidx, csr_mode=False):
                     print(line, file=sby_file)
 
 for grp in groups:
-    with open("../../insns/isa_%s.txt" % isa) as isa_file:
+    with open("%s/insns/isa_%s.txt" % (basedir, isa)) as isa_file:
         for insn in isa_file:
             for chanidx in range(nret):
                 check_insn(grp, insn.strip(), chanidx)
